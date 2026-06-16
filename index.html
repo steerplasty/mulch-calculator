@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mulch Calculator</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green-dark:#1a3a1a;--green-mid:#2d5a27;--green-light:#4a8c3f;
+    --amber:#c8852a;--amber-light:#f0a84a;
+    --cream:#f5f0e8;--text:#1a1a18;--text-muted:#5c5c52;
+    --border:rgba(0,0,0,0.12);--card:#fff;--bg:#f0ece2;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--green-dark);color:#fff;padding:0 1.5rem;display:flex;align-items:center;gap:.75rem;height:52px}
+  .logo{width:30px;height:30px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  header small{font-size:12px;opacity:.55;margin-left:auto}
+  .layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px)}
+  .side{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+  .sec{padding:1rem 1.1rem;border-bottom:1px solid var(--border)}
+  .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.6rem}
+  .row{display:flex;gap:.45rem}
+  input[type=text]{flex:1;padding:.5rem .7rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+  input[type=text]:focus{border-color:var(--green-light)}
+  button{cursor:pointer;border:none;border-radius:7px;font-size:13.5px;font-weight:500;transition:background .15s,transform .1s}
+  button:active{transform:scale(.97)}
+  .btn-p{background:var(--green-mid);color:#fff;padding:.5rem .9rem;white-space:nowrap}
+  .btn-p:hover{background:var(--green-light)}
+  .btn-s{background:transparent;color:var(--text);border:1px solid var(--border);padding:.45rem .8rem}
+  .btn-s:hover{background:var(--bg)}
+  .btn-d{background:transparent;color:#a33;border:1px solid rgba(160,50,50,.3);padding:.45rem .8rem}
+  .btn-d:hover{background:rgba(160,50,50,.06)}
+  .tools{display:flex;gap:.4rem;flex-wrap:wrap}
+  .tbtn{display:flex;align-items:center;gap:.35rem;padding:.45rem .75rem;border:1px solid var(--border);border-radius:7px;background:transparent;font-size:12.5px;font-weight:500;color:var(--text);cursor:pointer;transition:all .15s}
+  .tbtn:hover{background:var(--bg)}
+  .tbtn.on{background:var(--green-mid);color:#fff;border-color:var(--green-mid)}
+  .depth-row{display:flex;align-items:center;gap:.7rem}
+  .depth-row label{font-size:13px;color:var(--text-muted);flex-shrink:0}
+  input[type=range]{flex:1;accent-color:var(--green-mid)}
+  .dval{font-size:13px;font-weight:600;color:var(--green-mid);min-width:38px;text-align:right}
+  .results{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;height:100%;text-align:center;padding:1.5rem;color:var(--text-muted)}
+  .empty span{font-size:36px;opacity:.35}
+  .empty p{font-size:13px;line-height:1.6;max-width:190px}
+  .mc{background:var(--green-dark);border-radius:9px;padding:1rem 1.1rem}
+  .mc .ml{font-size:11.5px;color:rgba(255,255,255,.55);margin-bottom:.25rem}
+  .mc .mv{font-size:28px;font-weight:700;color:#fff;line-height:1}
+  .mc .mu{font-size:12px;font-weight:400;color:rgba(255,255,255,.55);margin-left:3px}
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+  .mcard{background:var(--bg);border-radius:8px;padding:.8rem .9rem}
+  .mcard .ml{font-size:11px;color:var(--text-muted);margin-bottom:.2rem}
+  .mcard .mv{font-size:20px;font-weight:700;color:var(--green-dark);line-height:1}
+  .mcard .mu{font-size:11.5px;font-weight:400;color:var(--text-muted);margin-left:2px}
+  .tip{background:#fffbf0;border:1px solid rgba(200,133,42,.3);border-left:3px solid var(--amber);border-radius:0 7px 7px 0;padding:.65rem .85rem;font-size:12.5px;color:#7a5a1a;line-height:1.5}
+  .slist{display:flex;flex-direction:column;gap:.35rem}
+  .sitem{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:6px;padding:.4rem .6rem;font-size:12.5px}
+  .sarea{color:var(--text-muted);font-size:11.5px}
+  .srm{background:none;border:none;color:#a33;cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
+  #status{font-size:11.5px;color:var(--text-muted);padding:.3rem 0;min-height:18px}
+  #map{width:100%;height:100%}
+  .mwrap{position:relative;flex:1}
+  .hint{position:absolute;bottom:.85rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;font-size:12px;padding:.4rem .9rem;border-radius:18px;pointer-events:none;white-space:nowrap;z-index:999}
+  .setup-box{background:#fffbf0;border:1px solid rgba(200,133,42,.3);border-radius:8px;padding:.85rem 1rem;font-size:12.5px;line-height:1.6;color:#7a5a1a;margin:.75rem .75rem 0}
+  .setup-box strong{display:block;margin-bottom:.3rem;font-size:13px}
+  .setup-box a{color:var(--amber)}
+  @media(max-width:660px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}.side{max-height:48vh}header small{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🌿</div>
+  <h1>Mulch Calculator</h1>
+  <small>Free · Open Source · No credit card</small>
+</header>
+<div class="layout">
+  <div class="side">
+
+    <!-- API key setup -->
+    <div id="setup-sec" class="sec" style="display:none">
+      <div class="lbl">Esri API Key</div>
+      <div class="setup-box">
+        <strong>One-time setup</strong>
+        Free account at <a href="https://location.arcgis.com" target="_blank">location.arcgis.com</a> — no credit card needed. See instructions below the map for a step-by-step guide.
+      </div>
+      <div style="padding:.75rem .1rem 0">
+        <div class="row">
+          <input type="text" id="key-in" placeholder="Paste your Esri API key here"/>
+          <button class="btn-p" onclick="saveKey()">Save</button>
+        </div>
+        <div id="key-status" style="font-size:11.5px;color:var(--text-muted);margin-top:.4rem"></div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="sec">
+      <div class="lbl">Property Address</div>
+      <div class="row">
+        <input type="text" id="addr" placeholder="123 Main St, Cape Coral, FL"/>
+        <button class="btn-p" onclick="goAddr()">Go</button>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <!-- Tools -->
+    <div class="sec">
+      <div class="lbl">Draw Mulch Area</div>
+      <div class="tools">
+        <button class="tbtn" id="tb-poly" onclick="setTool('poly')">✏️ Polygon</button>
+        <button class="tbtn" id="tb-rect" onclick="setTool('rect')">⬛ Rectangle</button>
+        <button class="btn-d" onclick="clearAll()">🗑 Clear all</button>
+      </div>
+    </div>
+
+    <!-- Depth -->
+    <div class="sec">
+      <div class="lbl">Mulch Depth</div>
+      <div class="depth-row">
+        <label>Depth</label>
+        <input type="range" min="1" max="6" step=".5" value="3" id="depth" oninput="onDepth(this.value)"/>
+        <span class="dval" id="dval">3 in</span>
+      </div>
+    </div>
+
+    <!-- Shape list -->
+    <div class="sec" id="shapes-sec" style="display:none">
+      <div class="lbl">Selected Areas</div>
+      <div class="slist" id="slist"></div>
+    </div>
+
+    <!-- Results -->
+    <div class="results">
+      <div class="empty" id="empty">
+        <span>🗺️</span>
+        <p>Enter an address, then draw your mulch area on the satellite map</p>
+      </div>
+      <div id="res" style="display:none;flex-direction:column;gap:.55rem">
+        <div class="mc">
+          <div class="ml">Cubic yards needed</div>
+          <div class="mv" id="r-cy">—<span class="mu">cu yd</span></div>
+        </div>
+        <div class="mgrid">
+          <div class="mcard"><div class="ml">Total area</div><div class="mv" id="r-sf">—<span class="mu">sq ft</span></div></div>
+          <div class="mcard"><div class="ml">2 cu ft bags</div><div class="mv" id="r-b2">—<span class="mu">bags</span></div></div>
+          <div class="mcard"><div class="ml">3 cu ft bags</div><div class="mv" id="r-b3">—<span class="mu">bags</span></div></div>
+          <div class="mcard"><div class="ml">Depth</div><div class="mv" id="r-dp">3<span class="mu">in</span></div></div>
+        </div>
+        <div class="tip" id="r-tip"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mwrap">
+    <div id="map"></div>
+    <div class="hint" id="hint" style="display:none">Click to add points · Double-click to finish polygon</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@esri/leaflet-vector@4.2.3/dist/leaflet-vector.js"></script>
+<script>
+const SK = 'mulch_esri_key';
+let map, depthIn = 3, shapes = [], drawing = null, drawPts = [], drawLine = null, tempMarkers = [];
+
+function getKey(){ return localStorage.getItem(SK)||''; }
+function saveKey(){
+  const k = document.getElementById('key-in').value.trim();
+  if(!k) return;
+  localStorage.setItem(SK, k);
+  document.getElementById('key-status').textContent = 'Key saved — loading satellite map…';
+  setTimeout(()=>{ initMap(k); document.getElementById('setup-sec').style.display='none'; }, 400);
+}
+function status(t){ document.getElementById('status').textContent = t; }
+
+function initMap(key){
+  if(map) return;
+  map = L.map('map', { center:[26.6, -81.97], zoom:19, zoomControl:true });
+
+  // Esri satellite tiles (World Imagery) — free with API key
+  L.tileLayer(
+    `https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token=${key}`,
+    { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', maxZoom:22, maxNativeZoom:19 }
+  ).addTo(map);
+
+  map.on('click', onMapClick);
+  map.on('dblclick', onMapDblClick);
+  status('Map loaded — enter an address to zoom to your property');
+}
+
+function goAddr(){
+  const addr = document.getElementById('addr').value.trim();
+  if(!addr){ status('Please enter an address'); return; }
+  if(!map){ status('⚠️ Set your Esri API key first'); return; }
+  status('Searching…');
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, {
+    headers:{ 'Accept-Language':'en', 'User-Agent':'MulchCalculator/1.0' }
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d.length){ status('Address not found — try adding city and state'); return; }
+    const {lat,lon,display_name} = d[0];
+    map.setView([+lat,+lon], 20);
+    status('✓ Found — now draw your mulch area');
+  })
+  .catch(()=> status('Search failed — check your internet connection'));
+}
+
+let activeTool = null;
+function setTool(t){
+  if(activeTool===t){ cancelDraw(); return; }
+  cancelDraw();
+  activeTool = t;
+  document.getElementById('tb-poly').classList.toggle('on', t==='poly');
+  document.getElementById('tb-rect').classList.toggle('on', t==='rect');
+  document.getElementById('hint').style.display = t==='poly' ? 'block' : 'none';
+  if(t==='rect') map.on('mousedown', startRect);
+}
+
+function cancelDraw(){
+  activeTool = null;
+  document.getElementById('tb-poly').classList.remove('on');
+  document.getElementById('tb-rect').classList.remove('on');
+  document.getElementById('hint').style.display = 'none';
+  map.off('mousedown', startRect);
+  map.off('mousemove', moveRect);
+  map.off('mouseup', endRect);
+  if(drawLine){ map.removeLayer(drawLine); drawLine=null; }
+  tempMarkers.forEach(m=>map.removeLayer(m));
+  tempMarkers=[];
+  drawPts=[];
+  if(drawing){ map.removeLayer(drawing); drawing=null; }
+}
+
+function onMapClick(e){
+  if(activeTool!=='poly') return;
+  drawPts.push([e.latlng.lat, e.latlng.lng]);
+  const m = L.circleMarker(e.latlng,{radius:5,color:'#c8852a',fillColor:'#f0a84a',fillOpacity:1,weight:2}).addTo(map);
+  tempMarkers.push(m);
+  if(drawLine) map.removeLayer(drawLine);
+  if(drawPts.length>1){
+    drawLine = L.polyline(drawPts,{color:'#c8852a',weight:2,dashArray:'5,4'}).addTo(map);
+  }
+}
+
+function onMapDblClick(e){
+  if(activeTool!=='poly' || drawPts.length<3) return;
+  L.DomEvent.preventDefault(e);
+  finishPoly();
+}
+
+function finishPoly(){
+  const pts = [...drawPts];
+  tempMarkers.forEach(m=>map.removeLayer(m)); tempMarkers=[];
+  if(drawLine){ map.removeLayer(drawLine); drawLine=null; }
+  drawPts=[];
+  const poly = L.polygon(pts,{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.35,weight:2.5}).addTo(map);
+  shapes.push({layer:poly, type:'poly'});
+  activeTool=null;
+  document.getElementById('tb-poly').classList.remove('on');
+  document.getElementById('hint').style.display='none';
+  updateResults();
+}
+
+// Rectangle drawing
+let rectStart=null, rectLayer=null;
+function startRect(e){
+  if(activeTool!=='rect') return;
+  rectStart = e.latlng;
+  map.dragging.disable();
+  map.on('mousemove', moveRect);
+  map.on('mouseup', endRect);
+}
+function moveRect(e){
+  if(!rectStart) return;
+  if(rectLayer) map.removeLayer(rectLayer);
+  rectLayer = L.rectangle([rectStart, e.latlng],{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.35,weight:2.5}).addTo(map);
+}
+function endRect(e){
+  map.dragging.enable();
+  map.off('mousemove', moveRect);
+  map.off('mouseup', endRect);
+  if(rectLayer && rectStart){
+    shapes.push({layer:rectLayer, type:'rect', bounds:[rectStart, e.latlng]});
+    rectLayer=null; rectStart=null;
+    activeTool=null;
+    document.getElementById('tb-rect').classList.remove('on');
+    map.off('mousedown', startRect);
+    updateResults();
+  }
+}
+
+function clearAll(){
+  shapes.forEach(s=>map.removeLayer(s.layer));
+  shapes=[];
+  cancelDraw();
+  updateResults();
+}
+
+function sqMetersToSqFt(m){ return m*10.7639; }
+
+function getAreaSqFt(s){
+  if(s.type==='poly'){
+    const latlngs = s.layer.getLatLngs()[0];
+    // Shoelace formula on projected coords for area
+    let area=0;
+    const R=6371000;
+    const pts = latlngs.map(ll=>({ lat:ll.lat*Math.PI/180, lng:ll.lng*Math.PI/180 }));
+    for(let i=0;i<pts.length;i++){
+      const j=(i+1)%pts.length;
+      area += pts[i].lng*pts[j].lat - pts[j].lng*pts[i].lat;
+    }
+    // Use Leaflet's built-in approach via bounding
+    const bounds = s.layer.getBounds();
+    const ne=bounds.getNorthEast(), sw=bounds.getSouthWest();
+    // Better: use map.distance for accurate measurement
+    const widthM = map.distance([ne.lat,sw.lng],[ne.lat,ne.lng]);
+    const heightM = map.distance([ne.lat,ne.lng],[sw.lat,ne.lng]);
+    // For polygons, calculate properly via area
+    const lls = s.layer.getLatLngs()[0];
+    let a=0;
+    for(let i=0;i<lls.length;i++){
+      const j=(i+1)%lls.length;
+      const p1=lls[i], p2=lls[j];
+      const x1=p1.lng*Math.PI/180*Math.cos(p1.lat*Math.PI/180)*R;
+      const y1=p1.lat*Math.PI/180*R;
+      const x2=p2.lng*Math.PI/180*Math.cos(p2.lat*Math.PI/180)*R;
+      const y2=p2.lat*Math.PI/180*R;
+      a += (x1*y2 - x2*y1);
+    }
+    return sqMetersToSqFt(Math.abs(a/2));
+  } else {
+    const b = s.layer.getBounds();
+    const ne=b.getNorthEast(), sw=b.getSouthWest();
+    const w = map.distance(sw,[sw.lat,ne.lng]);
+    const h = map.distance(sw,[ne.lat,sw.lng]);
+    return sqMetersToSqFt(w*h);
+  }
+}
+
+function onDepth(v){
+  depthIn=parseFloat(v);
+  document.getElementById('dval').textContent=v+' in';
+  updateResults();
+}
+
+function updateResults(){
+  if(!shapes.length){
+    document.getElementById('empty').style.display='flex';
+    document.getElementById('res').style.display='none';
+    document.getElementById('shapes-sec').style.display='none';
+    return;
+  }
+  let total=0;
+  const list=document.getElementById('slist');
+  list.innerHTML='';
+  shapes.forEach((s,i)=>{
+    const sf=getAreaSqFt(s);
+    total+=sf;
+    const el=document.createElement('div');
+    el.className='sitem';
+    el.innerHTML=`<span>Area ${i+1}</span><span class="sarea">${Math.round(sf).toLocaleString()} sq ft</span><button class="srm" onclick="removeShape(${i})">×</button>`;
+    list.appendChild(el);
+  });
+  document.getElementById('shapes-sec').style.display='block';
+
+  const cf=(total*depthIn)/12;
+  const cy=cf/27;
+  const b2=Math.ceil(cf/2);
+  const b3=Math.ceil(cf/3);
+
+  document.getElementById('empty').style.display='none';
+  document.getElementById('res').style.display='flex';
+  document.getElementById('r-sf').innerHTML=`${Math.round(total).toLocaleString()}<span class="mu">sq ft</span>`;
+  document.getElementById('r-cy').innerHTML=`${cy.toFixed(1)}<span class="mu">cu yd</span>`;
+  document.getElementById('r-b2').innerHTML=`${b2}<span class="mu">bags</span>`;
+  document.getElementById('r-b3').innerHTML=`${b3}<span class="mu">bags</span>`;
+  document.getElementById('r-dp').innerHTML=`${depthIn}<span class="mu">in</span>`;
+
+  let tip='';
+  if(cy>=3) tip=`💡 At ${cy.toFixed(1)} cu yd, buying in bulk from a landscape supplier will save you money over bags.`;
+  else if(cy>=1) tip=`💡 You need about ${b3} large (3 cu ft) bags — available at any home improvement store.`;
+  else tip=`💡 Small area — ${b2} bags from any garden center will do it.`;
+  document.getElementById('r-tip').textContent=tip;
+}
+
+function removeShape(i){
+  map.removeLayer(shapes[i].layer);
+  shapes.splice(i,1);
+  updateResults();
+}
+
+// Init
+document.getElementById('addr').addEventListener('keydown',e=>{if(e.key==='Enter')goAddr()});
+document.getElementById('key-in')?.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey()});
+
+const k=getKey();
+if(k){ initMap(k); }
+else { document.getElementById('setup-sec').style.display='block'; status('Enter your Esri API key above to load the satellite map'); }
+</script>
+</body>
+</html>
