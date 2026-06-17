@@ -6,91 +6,120 @@
 <title>Mulch Calculator</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --green-dark:#1a3a1a;--green-mid:#2d5a27;--green-light:#4a8c3f;
-    --amber:#c8852a;--amber-light:#f0a84a;
-    --cream:#f5f0e8;--text:#1a1a18;--text-muted:#5c5c52;
-    --border:rgba(0,0,0,0.12);--card:#fff;--bg:#f0ece2;
-  }
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-  header{background:var(--green-dark);color:#fff;padding:0 1.5rem;display:flex;align-items:center;gap:.75rem;height:52px}
-  .logo{width:30px;height:30px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-  header h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
-  header small{font-size:12px;opacity:.55;margin-left:auto}
-  .layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px)}
-  .side{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
-  .sec{padding:1rem 1.1rem;border-bottom:1px solid var(--border)}
-  .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.6rem}
-  .row{display:flex;gap:.45rem}
-  input[type=text]{flex:1;padding:.5rem .7rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
-  input[type=text]:focus{border-color:var(--green-light)}
-  button{cursor:pointer;border:none;border-radius:7px;font-size:13.5px;font-weight:500;transition:background .15s,transform .1s}
-  button:active{transform:scale(.97)}
-  .btn-p{background:var(--green-mid);color:#fff;padding:.5rem .9rem;white-space:nowrap}
-  .btn-p:hover{background:var(--green-light)}
-  .btn-s{background:transparent;color:var(--text);border:1px solid var(--border);padding:.45rem .8rem}
-  .btn-s:hover{background:var(--bg)}
-  .btn-d{background:transparent;color:#a33;border:1px solid rgba(160,50,50,.3);padding:.45rem .8rem}
-  .btn-d:hover{background:rgba(160,50,50,.06)}
-  .tools{display:flex;gap:.4rem;flex-wrap:wrap}
-  .tbtn{display:flex;align-items:center;gap:.35rem;padding:.45rem .75rem;border:1px solid var(--border);border-radius:7px;background:transparent;font-size:12.5px;font-weight:500;color:var(--text);cursor:pointer;transition:all .15s}
-  .tbtn:hover{background:var(--bg)}
-  .tbtn.on{background:var(--green-mid);color:#fff;border-color:var(--green-mid)}
-  .depth-row{display:flex;align-items:center;gap:.7rem}
-  .depth-row label{font-size:13px;color:var(--text-muted);flex-shrink:0}
-  input[type=range]{flex:1;accent-color:var(--green-mid)}
-  .dval{font-size:13px;font-weight:600;color:var(--green-mid);min-width:38px;text-align:right}
-  .results{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
-  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;height:100%;text-align:center;padding:1.5rem;color:var(--text-muted)}
-  .empty span{font-size:36px;opacity:.35}
-  .empty p{font-size:13px;line-height:1.6;max-width:190px}
-  .mc{background:var(--green-dark);border-radius:9px;padding:1rem 1.1rem}
-  .mc .ml{font-size:11.5px;color:rgba(255,255,255,.55);margin-bottom:.25rem}
-  .mc .mv{font-size:28px;font-weight:700;color:#fff;line-height:1}
-  .mc .mu{font-size:12px;font-weight:400;color:rgba(255,255,255,.55);margin-left:3px}
-  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
-  .mcard{background:var(--bg);border-radius:8px;padding:.8rem .9rem}
-  .mcard .ml{font-size:11px;color:var(--text-muted);margin-bottom:.2rem}
-  .mcard .mv{font-size:20px;font-weight:700;color:var(--green-dark);line-height:1}
-  .mcard .mu{font-size:11.5px;font-weight:400;color:var(--text-muted);margin-left:2px}
-  .tip{background:#fffbf0;border:1px solid rgba(200,133,42,.3);border-left:3px solid var(--amber);border-radius:0 7px 7px 0;padding:.65rem .85rem;font-size:12.5px;color:#7a5a1a;line-height:1.5}
-  .slist{display:flex;flex-direction:column;gap:.35rem}
-  .sitem{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:6px;padding:.4rem .6rem;font-size:12.5px}
-  .sarea{color:var(--text-muted);font-size:11.5px}
-  .srm{background:none;border:none;color:#a33;cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
-  #status{font-size:11.5px;color:var(--text-muted);padding:.3rem 0;min-height:18px}
-  #map{width:100%;height:100%}
-  .mwrap{position:relative;flex:1}
-  .hint{position:absolute;bottom:.85rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;font-size:12px;padding:.4rem .9rem;border-radius:18px;pointer-events:none;white-space:nowrap;z-index:999}
-  .setup-box{background:#fffbf0;border:1px solid rgba(200,133,42,.3);border-radius:8px;padding:.85rem 1rem;font-size:12.5px;line-height:1.6;color:#7a5a1a;margin:.75rem .75rem 0}
-  .setup-box strong{display:block;margin-bottom:.3rem;font-size:13px}
-  .setup-box a{color:var(--amber)}
-  @media(max-width:660px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}.side{max-height:48vh}header small{display:none}}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gd:#1a3a1a;--gm:#2d5a27;--gl:#4a8c3f;
+  --am:#c8852a;--al:#f0a84a;
+  --bg:#f0ece2;--card:#fff;--text:#1a1a18;--muted:#5c5c52;
+  --bdr:rgba(0,0,0,0.12);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--gd);color:#fff;padding:0 1.25rem;display:flex;align-items:center;gap:.65rem;height:50px;flex-shrink:0}
+.logo{width:28px;height:28px;background:var(--am);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+header h1{font-size:15px;font-weight:600}
+header small{font-size:11px;opacity:.5;margin-left:auto}
+.layout{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 50px)}
+.side{background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow-y:auto}
+.sec{padding:.85rem 1rem;border-bottom:1px solid var(--bdr)}
+.lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:.55rem}
+.row{display:flex;gap:.4rem}
+input[type=text],select{flex:1;padding:.45rem .65rem;border:1px solid var(--bdr);border-radius:7px;font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;font-family:inherit}
+input[type=text]:focus,select:focus{border-color:var(--gl)}
+button{cursor:pointer;border:none;border-radius:7px;font-size:13px;font-weight:500;transition:background .15s,transform .1s;font-family:inherit}
+button:active{transform:scale(.97)}
+.btn-p{background:var(--gm);color:#fff;padding:.45rem .85rem;white-space:nowrap}
+.btn-p:hover{background:var(--gl)}
+.btn-d{background:transparent;color:#a33;border:1px solid rgba(160,50,50,.3);padding:.4rem .75rem}
+.btn-d:hover{background:rgba(160,50,50,.06)}
+.tools{display:flex;gap:.35rem;flex-wrap:wrap}
+.tbtn{display:flex;align-items:center;gap:.3rem;padding:.4rem .7rem;border:1px solid var(--bdr);border-radius:7px;background:transparent;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:all .15s}
+.tbtn:hover{background:var(--bg)}
+.tbtn.on{background:var(--gm);color:#fff;border-color:var(--gm)}
+
+/* Material cards */
+.mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.mat-card{border:1px solid var(--bdr);border-radius:8px;padding:.5rem .6rem;cursor:pointer;transition:all .15s;background:var(--bg);text-align:left}
+.mat-card:hover{border-color:var(--gl);background:#f0f5ee}
+.mat-card.sel{border-color:var(--gm);background:#e8f4e5;border-width:2px}
+.mat-icon{font-size:18px;display:block;margin-bottom:2px}
+.mat-name{font-size:12px;font-weight:600;color:var(--text)}
+.mat-sub{font-size:10.5px;color:var(--muted)}
+
+/* Use-case presets */
+.preset-row{display:flex;gap:.35rem;flex-wrap:wrap}
+.preset{padding:.3rem .6rem;border:1px solid var(--bdr);border-radius:20px;font-size:11.5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;white-space:nowrap}
+.preset:hover{border-color:var(--am);color:var(--am)}
+.preset.sel{background:var(--am);color:#fff;border-color:var(--am)}
+
+/* Depth */
+.depth-wrap{display:flex;flex-direction:column;gap:.5rem}
+.depth-row{display:flex;align-items:center;gap:.65rem}
+.depth-row label{font-size:12.5px;color:var(--muted);flex-shrink:0;min-width:38px}
+input[type=range]{flex:1;accent-color:var(--gm);cursor:pointer}
+.dval{font-size:13px;font-weight:600;color:var(--gm);min-width:34px;text-align:right}
+.depth-hint{font-size:11px;color:var(--muted);font-style:italic;min-height:14px}
+
+/* Results */
+.results{flex:1;padding:.85rem;display:flex;flex-direction:column;gap:.5rem}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;height:100%;text-align:center;padding:1.25rem;color:var(--muted)}
+.empty span{font-size:34px;opacity:.3}
+.empty p{font-size:12.5px;line-height:1.6;max-width:180px}
+.hero-card{background:var(--gd);border-radius:9px;padding:.9rem 1rem}
+.hero-card .hl{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:.2rem}
+.hero-card .hv{font-size:26px;font-weight:700;color:#fff;line-height:1}
+.hero-card .hu{font-size:11.5px;font-weight:400;color:rgba(255,255,255,.5);margin-left:3px}
+.hero-card .hsub{font-size:11px;color:rgba(255,255,255,.45);margin-top:.2rem}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.mcard{background:var(--bg);border-radius:8px;padding:.65rem .75rem}
+.mcard .ml{font-size:10.5px;color:var(--muted);margin-bottom:.15rem}
+.mcard .mv{font-size:18px;font-weight:700;color:var(--gd);line-height:1}
+.mcard .mu{font-size:11px;font-weight:400;color:var(--muted);margin-left:2px}
+.tip{background:#fffbf0;border:1px solid rgba(200,133,42,.25);border-left:3px solid var(--am);border-radius:0 7px 7px 0;padding:.55rem .8rem;font-size:12px;color:#7a5a1a;line-height:1.5}
+.warn{background:#fff3f3;border:1px solid rgba(160,50,50,.2);border-left:3px solid #c44;border-radius:0 7px 7px 0;padding:.55rem .8rem;font-size:12px;color:#7a1a1a;line-height:1.5}
+
+/* Shapes list */
+.slist{display:flex;flex-direction:column;gap:.3rem}
+.sitem{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:6px;padding:.35rem .55rem;font-size:12px}
+.sarea{color:var(--muted);font-size:11px}
+.srm{background:none;border:none;color:#a33;cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
+
+/* Status + misc */
+#status{font-size:11px;color:var(--muted);padding:.25rem 0;min-height:16px}
+#map{width:100%;height:100%}
+.mwrap{position:relative;flex:1}
+.hint{position:absolute;bottom:.75rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:11.5px;padding:.35rem .85rem;border-radius:18px;pointer-events:none;white-space:nowrap;z-index:999;backdrop-filter:blur(4px)}
+.finish-btn{position:absolute;bottom:.75rem;right:1rem;background:var(--gm);color:#fff;border:none;border-radius:8px;padding:.45rem .9rem;font-size:12.5px;font-weight:600;cursor:pointer;z-index:999;display:none}
+.finish-btn:hover{background:var(--gl)}
+.setup-box{background:#fffbf0;border:1px solid rgba(200,133,42,.3);border-radius:8px;padding:.75rem .9rem;font-size:12px;line-height:1.6;color:#7a5a1a;margin:.65rem .65rem 0}
+.setup-box strong{display:block;margin-bottom:.25rem;font-size:12.5px}
+.setup-box a{color:var(--am)}
+.export-btn{width:100%;background:transparent;border:1px solid var(--bdr);color:var(--text);padding:.4rem;border-radius:7px;font-size:12px;cursor:pointer;margin-top:.25rem}
+.export-btn:hover{background:var(--bg)}
+@media(max-width:660px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}.side{max-height:50vh}header small{display:none}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">🌿</div>
-  <h1>Mulch Calculator</h1>
+  <h1>Mulch &amp; Material Calculator</h1>
   <small>Free · Open Source · No credit card</small>
 </header>
 <div class="layout">
   <div class="side">
 
-    <!-- API key setup -->
+    <!-- API Key -->
     <div id="setup-sec" class="sec" style="display:none">
       <div class="lbl">Esri API Key</div>
       <div class="setup-box">
         <strong>One-time setup</strong>
-        Free account at <a href="https://location.arcgis.com" target="_blank">location.arcgis.com</a> — no credit card needed. See instructions below the map for a step-by-step guide.
+        Free at <a href="https://location.arcgis.com" target="_blank">location.arcgis.com</a> — no credit card needed.
       </div>
-      <div style="padding:.75rem .1rem 0">
+      <div style="padding:.65rem .1rem 0">
         <div class="row">
-          <input type="text" id="key-in" placeholder="Paste your Esri API key here"/>
+          <input type="text" id="key-in" placeholder="Paste your Esri API key"/>
           <button class="btn-p" onclick="saveKey()">Save</button>
         </div>
-        <div id="key-status" style="font-size:11.5px;color:var(--text-muted);margin-top:.4rem"></div>
+        <div id="key-status" style="font-size:11px;color:var(--muted);margin-top:.35rem"></div>
       </div>
     </div>
 
@@ -104,9 +133,34 @@
       <div id="status"></div>
     </div>
 
-    <!-- Tools -->
+    <!-- Material Selector -->
     <div class="sec">
-      <div class="lbl">Draw Mulch Area</div>
+      <div class="lbl">Material Type</div>
+      <div class="mat-grid" id="mat-grid"></div>
+    </div>
+
+    <!-- Use Case / Preset -->
+    <div class="sec">
+      <div class="lbl">Purpose <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">— sets recommended depth</span></div>
+      <div class="preset-row" id="preset-row"></div>
+    </div>
+
+    <!-- Depth -->
+    <div class="sec">
+      <div class="lbl">Material Depth</div>
+      <div class="depth-wrap">
+        <div class="depth-row">
+          <label>Depth</label>
+          <input type="range" min="1" max="12" step=".5" value="3" id="depth" oninput="onDepth(this.value)"/>
+          <span class="dval" id="dval">3 in</span>
+        </div>
+        <div class="depth-hint" id="depth-hint">Recommended: 2–3 in for mulch refresh</div>
+      </div>
+    </div>
+
+    <!-- Draw Tools -->
+    <div class="sec">
+      <div class="lbl">Draw Your Area</div>
       <div class="tools">
         <button class="tbtn" id="tb-poly" onclick="setTool('poly')">✏️ Polygon</button>
         <button class="tbtn" id="tb-rect" onclick="setTool('rect')">⬛ Rectangle</button>
@@ -114,19 +168,9 @@
       </div>
     </div>
 
-    <!-- Depth -->
-    <div class="sec">
-      <div class="lbl">Mulch Depth</div>
-      <div class="depth-row">
-        <label>Depth</label>
-        <input type="range" min="1" max="6" step=".5" value="3" id="depth" oninput="onDepth(this.value)"/>
-        <span class="dval" id="dval">3 in</span>
-      </div>
-    </div>
-
     <!-- Shape list -->
     <div class="sec" id="shapes-sec" style="display:none">
-      <div class="lbl">Selected Areas</div>
+      <div class="lbl">Areas</div>
       <div class="slist" id="slist"></div>
     </div>
 
@@ -134,80 +178,172 @@
     <div class="results">
       <div class="empty" id="empty">
         <span>🗺️</span>
-        <p>Enter an address, then draw your mulch area on the satellite map</p>
+        <p>Enter an address, pick a material, then draw your area on the satellite map</p>
       </div>
-      <div id="res" style="display:none;flex-direction:column;gap:.55rem">
-        <div class="mc">
-          <div class="ml">Cubic yards needed</div>
-          <div class="mv" id="r-cy">—<span class="mu">cu yd</span></div>
+      <div id="res" style="display:none;flex-direction:column;gap:.45rem">
+        <div class="hero-card">
+          <div class="hl" id="r-mat-label">Cubic yards needed</div>
+          <div class="hv" id="r-cy">—<span class="hu">cu yd</span></div>
+          <div class="hsub" id="r-hero-sub"></div>
         </div>
         <div class="mgrid">
           <div class="mcard"><div class="ml">Total area</div><div class="mv" id="r-sf">—<span class="mu">sq ft</span></div></div>
-          <div class="mcard"><div class="ml">2 cu ft bags</div><div class="mv" id="r-b2">—<span class="mu">bags</span></div></div>
-          <div class="mcard"><div class="ml">3 cu ft bags</div><div class="mv" id="r-b3">—<span class="mu">bags</span></div></div>
+          <div class="mcard"><div class="ml" id="r-bag-label">2 cu ft bags</div><div class="mv" id="r-bags">—<span class="mu">bags</span></div></div>
           <div class="mcard"><div class="ml">Depth</div><div class="mv" id="r-dp">3<span class="mu">in</span></div></div>
+          <div class="mcard"><div class="ml">Coverage</div><div class="mv" id="r-cov">—<span class="mu">sq ft/yd</span></div></div>
         </div>
+        <div id="r-warn" class="warn" style="display:none"></div>
         <div class="tip" id="r-tip"></div>
+        <button class="export-btn" onclick="exportSummary()">📋 Copy summary to clipboard</button>
       </div>
     </div>
   </div>
 
   <div class="mwrap">
     <div id="map"></div>
-    <div class="hint" id="hint" style="display:none">Click to add points · Double-click to finish polygon</div>
+    <div class="hint" id="hint" style="display:none">Click to place points · Double-click or press Finish to close</div>
+    <button class="finish-btn" id="finish-btn" onclick="finishPoly()">✓ Finish polygon</button>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@esri/leaflet-vector@4.2.3/dist/leaflet-vector.js"></script>
 <script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const MATERIALS = [
+  { id:'wood',   icon:'🪵', name:'Wood Mulch',   sub:'Shredded / chips',  bagCuFt:2, unit:'bags', minDepth:2, maxDepth:4, note:'Most popular choice. Retains moisture, suppresses weeds, breaks down to enrich soil.' },
+  { id:'pine',   icon:'🌲', name:'Pine Straw',   sub:'Needles / bales',   bagCuFt:null, baleCovers:50, unit:'bales', minDepth:3, maxDepth:5, note:'Great for slopes — interlocks and doesn\'t wash away. Common in the Southeast.' },
+  { id:'rock',   icon:'🪨', name:'Rock / Gravel', sub:'Pea, river, lava',  bagCuFt:0.5, unit:'bags', minDepth:2, maxDepth:4, note:'Permanent — no breakdown. Excellent for drainage areas and around AC units. Heavy.' },
+  { id:'rubber', icon:'♻️', name:'Rubber Mulch',  sub:'Playground / beds', bagCuFt:1.5, unit:'bags', minDepth:2, maxDepth:3, note:'Long-lasting, doesn\'t float away. Popular for playgrounds and play areas.' },
+  { id:'cedar',  icon:'🌿', name:'Cedar Mulch',   sub:'Chips / shredded',  bagCuFt:2, unit:'bags', minDepth:2, maxDepth:4, note:'Natural insect repellent. Slower to break down than regular wood. Great scent.' },
+  { id:'black',  icon:'🖤', name:'Black Mulch',   sub:'Dyed wood',         bagCuFt:2, unit:'bags', minDepth:2, maxDepth:4, note:'High contrast — makes plants pop visually. Same performance as regular wood mulch.' },
+];
+
+const PRESETS = [
+  { id:'new',     label:'New bed',      depth:4, hint:'New beds: 4 in — deep layer blocks weeds and holds moisture for new plantings.' },
+  { id:'refresh', label:'Refresh',      depth:2, hint:'Refresh: 2 in — top up existing mulch that has compacted or decomposed.' },
+  { id:'weed',    label:'Weed control', depth:4, hint:'Weed control: 4 in — thicker layer cuts off light to weed seeds.' },
+  { id:'slope',   label:'Slope / slope',depth:3, hint:'Slopes: 3 in — balance between coverage and risk of washing. Pine straw works best here.' },
+  { id:'play',    label:'Playground',   depth:6, hint:'Playground safety: 6 in minimum — required depth for fall protection under equipment.' },
+  { id:'path',    label:'Path / border',depth:3, hint:'Paths & borders: 3 in — keeps edges clean and suppresses growth.' },
+  { id:'rock',    label:'Rock install', depth:3, hint:'Rock install: 3 in over landscape fabric for best weed suppression.' },
+];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+
 const SK = 'mulch_esri_key';
-let map, depthIn = 3, shapes = [], drawing = null, drawPts = [], drawLine = null, tempMarkers = [];
+let map, shapes = [], drawPts = [], drawLine = null, tempMarkers = [];
+let activeTool = null, rectStart = null, rectLayer = null;
+let depthIn = 3, selMat = MATERIALS[0], selPreset = null;
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+function buildMaterials(){
+  const g = document.getElementById('mat-grid');
+  MATERIALS.forEach(m=>{
+    const c = document.createElement('button');
+    c.className = 'mat-card' + (m.id===selMat.id?' sel':'');
+    c.id = 'mat-'+m.id;
+    c.innerHTML = `<span class="mat-icon">${m.icon}</span><span class="mat-name">${m.name}</span><span class="mat-sub">${m.sub}</span>`;
+    c.onclick = ()=>selectMat(m);
+    g.appendChild(c);
+  });
+}
+
+function buildPresets(){
+  const r = document.getElementById('preset-row');
+  PRESETS.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'preset';
+    b.id = 'preset-'+p.id;
+    b.textContent = p.label;
+    b.onclick = ()=>selectPreset(p);
+    r.appendChild(b);
+  });
+}
+
+function selectMat(m){
+  selMat = m;
+  document.querySelectorAll('.mat-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('mat-'+m.id).classList.add('sel');
+  // Auto-switch preset if rock material selected
+  if(m.id==='rock' && !selPreset){
+    selectPreset(PRESETS.find(p=>p.id==='rock'));
+  }
+  updateResults();
+}
+
+function selectPreset(p){
+  selPreset = p;
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('preset-'+p.id).classList.add('sel');
+  depthIn = p.depth;
+  document.getElementById('depth').value = p.depth;
+  document.getElementById('dval').textContent = p.depth + ' in';
+  document.getElementById('depth-hint').textContent = p.hint;
+  updateResults();
+}
+
+function onDepth(v){
+  depthIn = parseFloat(v);
+  document.getElementById('dval').textContent = v + ' in';
+  // Clear preset if user manually changes depth
+  selPreset = null;
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
+  // Show hint based on current material
+  const m = selMat;
+  if(depthIn < m.minDepth){
+    document.getElementById('depth-hint').textContent = `⚠️ Below recommended ${m.minDepth} in min for ${m.name}`;
+  } else if(depthIn > m.maxDepth){
+    document.getElementById('depth-hint').textContent = `ℹ️ Above typical ${m.maxDepth} in max — may be excessive`;
+  } else {
+    document.getElementById('depth-hint').textContent = `✓ Good depth for ${m.name} (${m.minDepth}–${m.maxDepth} in recommended)`;
+  }
+  updateResults();
+}
+
+// ─── Map ─────────────────────────────────────────────────────────────────────
 
 function getKey(){ return localStorage.getItem(SK)||''; }
 function saveKey(){
   const k = document.getElementById('key-in').value.trim();
   if(!k) return;
-  localStorage.setItem(SK, k);
-  document.getElementById('key-status').textContent = 'Key saved — loading satellite map…';
-  setTimeout(()=>{ initMap(k); document.getElementById('setup-sec').style.display='none'; }, 400);
+  localStorage.setItem(SK,k);
+  document.getElementById('key-status').textContent = 'Saved — loading map…';
+  setTimeout(()=>{ initMap(k); document.getElementById('setup-sec').style.display='none'; },300);
 }
 function status(t){ document.getElementById('status').textContent = t; }
 
 function initMap(key){
   if(map) return;
-  map = L.map('map', { center:[26.6, -81.97], zoom:19, zoomControl:true });
-
-  // Esri satellite tiles (World Imagery) — free with API key
+  map = L.map('map',{ center:[26.6,-81.97], zoom:19, zoomControl:true, doubleClickZoom:false });
   L.tileLayer(
     `https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token=${key}`,
-    { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', maxZoom:22, maxNativeZoom:19 }
+    { attribution:'Tiles © Esri', maxZoom:22, maxNativeZoom:19 }
   ).addTo(map);
-
   map.on('click', onMapClick);
   map.on('dblclick', onMapDblClick);
-  status('Map loaded — enter an address to zoom to your property');
+  status('Map loaded — enter an address above');
 }
 
 function goAddr(){
   const addr = document.getElementById('addr').value.trim();
-  if(!addr){ status('Please enter an address'); return; }
+  if(!addr){ status('Enter an address'); return; }
   if(!map){ status('⚠️ Set your Esri API key first'); return; }
   status('Searching…');
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, {
-    headers:{ 'Accept-Language':'en', 'User-Agent':'MulchCalculator/1.0' }
-  })
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`,
+    { headers:{'Accept-Language':'en','User-Agent':'MulchCalc/1.0'} })
   .then(r=>r.json())
   .then(d=>{
-    if(!d.length){ status('Address not found — try adding city and state'); return; }
-    const {lat,lon,display_name} = d[0];
-    map.setView([+lat,+lon], 20);
-    status('✓ Found — now draw your mulch area');
+    if(!d.length){ status('Not found — try adding city and state'); return; }
+    map.setView([+d[0].lat, +d[0].lon], 20);
+    status('✓ Found — draw your area on the map');
   })
-  .catch(()=> status('Search failed — check your internet connection'));
+  .catch(()=>status('Search failed — check connection'));
 }
 
-let activeTool = null;
+// ─── Drawing ─────────────────────────────────────────────────────────────────
+
 function setTool(t){
   if(activeTool===t){ cancelDraw(); return; }
   cancelDraw();
@@ -215,7 +351,12 @@ function setTool(t){
   document.getElementById('tb-poly').classList.toggle('on', t==='poly');
   document.getElementById('tb-rect').classList.toggle('on', t==='rect');
   document.getElementById('hint').style.display = t==='poly' ? 'block' : 'none';
-  if(t==='rect') map.on('mousedown', startRect);
+  if(t==='rect'){
+    map.on('mousedown', startRect);
+    map.getContainer().style.cursor = 'crosshair';
+  } else {
+    map.getContainer().style.cursor = 'crosshair';
+  }
 }
 
 function cancelDraw(){
@@ -223,48 +364,60 @@ function cancelDraw(){
   document.getElementById('tb-poly').classList.remove('on');
   document.getElementById('tb-rect').classList.remove('on');
   document.getElementById('hint').style.display = 'none';
+  document.getElementById('finish-btn').style.display = 'none';
+  map.getContainer().style.cursor = '';
   map.off('mousedown', startRect);
   map.off('mousemove', moveRect);
   map.off('mouseup', endRect);
   if(drawLine){ map.removeLayer(drawLine); drawLine=null; }
-  tempMarkers.forEach(m=>map.removeLayer(m));
-  tempMarkers=[];
+  tempMarkers.forEach(m=>map.removeLayer(m)); tempMarkers=[];
   drawPts=[];
-  if(drawing){ map.removeLayer(drawing); drawing=null; }
 }
 
 function onMapClick(e){
   if(activeTool!=='poly') return;
   drawPts.push([e.latlng.lat, e.latlng.lng]);
-  const m = L.circleMarker(e.latlng,{radius:5,color:'#c8852a',fillColor:'#f0a84a',fillOpacity:1,weight:2}).addTo(map);
-  tempMarkers.push(m);
+  const mk = L.circleMarker(e.latlng,{radius:5,color:'#c8852a',fillColor:'#f0a84a',fillOpacity:1,weight:2}).addTo(map);
+  tempMarkers.push(mk);
   if(drawLine) map.removeLayer(drawLine);
   if(drawPts.length>1){
     drawLine = L.polyline(drawPts,{color:'#c8852a',weight:2,dashArray:'5,4'}).addTo(map);
   }
+  // Show finish button once we have 3+ points
+  if(drawPts.length>=3){
+    document.getElementById('finish-btn').style.display = 'block';
+  }
 }
 
 function onMapDblClick(e){
-  if(activeTool!=='poly' || drawPts.length<3) return;
+  // Double-click closes polygon regardless of where clicked, as long as 3+ points exist
+  if(activeTool!=='poly') return;
+  L.DomEvent.stopPropagation(e);
   L.DomEvent.preventDefault(e);
-  finishPoly();
+  if(drawPts.length>=3){
+    finishPoly();
+  } else {
+    status('Draw at least 3 points before closing');
+  }
 }
 
 function finishPoly(){
+  if(drawPts.length<3){ status('Need at least 3 points'); return; }
   const pts = [...drawPts];
   tempMarkers.forEach(m=>map.removeLayer(m)); tempMarkers=[];
   if(drawLine){ map.removeLayer(drawLine); drawLine=null; }
   drawPts=[];
-  const poly = L.polygon(pts,{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.35,weight:2.5}).addTo(map);
-  shapes.push({layer:poly, type:'poly'});
+  document.getElementById('finish-btn').style.display='none';
+  const poly = L.polygon(pts,{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.3,weight:2.5}).addTo(map);
+  shapes.push({layer:poly, type:'poly', mat:selMat.id});
   activeTool=null;
   document.getElementById('tb-poly').classList.remove('on');
   document.getElementById('hint').style.display='none';
+  map.getContainer().style.cursor='';
   updateResults();
 }
 
-// Rectangle drawing
-let rectStart=null, rectLayer=null;
+// Rectangle
 function startRect(e){
   if(activeTool!=='rect') return;
   rectStart = e.latlng;
@@ -275,18 +428,19 @@ function startRect(e){
 function moveRect(e){
   if(!rectStart) return;
   if(rectLayer) map.removeLayer(rectLayer);
-  rectLayer = L.rectangle([rectStart, e.latlng],{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.35,weight:2.5}).addTo(map);
+  rectLayer = L.rectangle([rectStart,e.latlng],{color:'#c8852a',fillColor:'#f0a84a',fillOpacity:.3,weight:2.5}).addTo(map);
 }
 function endRect(e){
   map.dragging.enable();
-  map.off('mousemove', moveRect);
-  map.off('mouseup', endRect);
+  map.off('mousemove',moveRect);
+  map.off('mouseup',endRect);
   if(rectLayer && rectStart){
-    shapes.push({layer:rectLayer, type:'rect', bounds:[rectStart, e.latlng]});
+    shapes.push({layer:rectLayer, type:'rect', mat:selMat.id});
     rectLayer=null; rectStart=null;
     activeTool=null;
     document.getElementById('tb-rect').classList.remove('on');
-    map.off('mousedown', startRect);
+    map.off('mousedown',startRect);
+    map.getContainer().style.cursor='';
     updateResults();
   }
 }
@@ -298,26 +452,19 @@ function clearAll(){
   updateResults();
 }
 
+function removeShape(i){
+  map.removeLayer(shapes[i].layer);
+  shapes.splice(i,1);
+  updateResults();
+}
+
+// ─── Area Math ───────────────────────────────────────────────────────────────
+
 function sqMetersToSqFt(m){ return m*10.7639; }
 
 function getAreaSqFt(s){
+  const R=6371000;
   if(s.type==='poly'){
-    const latlngs = s.layer.getLatLngs()[0];
-    // Shoelace formula on projected coords for area
-    let area=0;
-    const R=6371000;
-    const pts = latlngs.map(ll=>({ lat:ll.lat*Math.PI/180, lng:ll.lng*Math.PI/180 }));
-    for(let i=0;i<pts.length;i++){
-      const j=(i+1)%pts.length;
-      area += pts[i].lng*pts[j].lat - pts[j].lng*pts[i].lat;
-    }
-    // Use Leaflet's built-in approach via bounding
-    const bounds = s.layer.getBounds();
-    const ne=bounds.getNorthEast(), sw=bounds.getSouthWest();
-    // Better: use map.distance for accurate measurement
-    const widthM = map.distance([ne.lat,sw.lng],[ne.lat,ne.lng]);
-    const heightM = map.distance([ne.lat,ne.lng],[sw.lat,ne.lng]);
-    // For polygons, calculate properly via area
     const lls = s.layer.getLatLngs()[0];
     let a=0;
     for(let i=0;i<lls.length;i++){
@@ -331,33 +478,30 @@ function getAreaSqFt(s){
     }
     return sqMetersToSqFt(Math.abs(a/2));
   } else {
-    const b = s.layer.getBounds();
-    const ne=b.getNorthEast(), sw=b.getSouthWest();
-    const w = map.distance(sw,[sw.lat,ne.lng]);
-    const h = map.distance(sw,[ne.lat,sw.lng]);
+    const b=s.layer.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
+    const w=map.distance(sw,[sw.lat,ne.lng]);
+    const h=map.distance(sw,[ne.lat,sw.lng]);
     return sqMetersToSqFt(w*h);
   }
 }
 
-function onDepth(v){
-  depthIn=parseFloat(v);
-  document.getElementById('dval').textContent=v+' in';
-  updateResults();
-}
+// ─── Results ─────────────────────────────────────────────────────────────────
 
 function updateResults(){
+  // Update shape list
+  const list = document.getElementById('slist');
+  list.innerHTML='';
   if(!shapes.length){
     document.getElementById('empty').style.display='flex';
     document.getElementById('res').style.display='none';
     document.getElementById('shapes-sec').style.display='none';
     return;
   }
-  let total=0;
-  const list=document.getElementById('slist');
-  list.innerHTML='';
+
+  let totalSqFt=0;
   shapes.forEach((s,i)=>{
     const sf=getAreaSqFt(s);
-    total+=sf;
+    totalSqFt+=sf;
     const el=document.createElement('div');
     el.className='sitem';
     el.innerHTML=`<span>Area ${i+1}</span><span class="sarea">${Math.round(sf).toLocaleString()} sq ft</span><button class="srm" onclick="removeShape(${i})">×</button>`;
@@ -365,37 +509,105 @@ function updateResults(){
   });
   document.getElementById('shapes-sec').style.display='block';
 
-  const cf=(total*depthIn)/12;
-  const cy=cf/27;
-  const b2=Math.ceil(cf/2);
-  const b3=Math.ceil(cf/3);
+  const m = selMat;
+  const cubicFt = (totalSqFt * depthIn) / 12;
+  const cubicYd = cubicFt / 27;
+  // Coverage per cubic yard at this depth
+  const covPerYd = Math.round(27 / (depthIn/12));
 
   document.getElementById('empty').style.display='none';
   document.getElementById('res').style.display='flex';
-  document.getElementById('r-sf').innerHTML=`${Math.round(total).toLocaleString()}<span class="mu">sq ft</span>`;
-  document.getElementById('r-cy').innerHTML=`${cy.toFixed(1)}<span class="mu">cu yd</span>`;
-  document.getElementById('r-b2').innerHTML=`${b2}<span class="mu">bags</span>`;
-  document.getElementById('r-b3').innerHTML=`${b3}<span class="mu">bags</span>`;
-  document.getElementById('r-dp').innerHTML=`${depthIn}<span class="mu">in</span>`;
 
-  let tip='';
-  if(cy>=3) tip=`💡 At ${cy.toFixed(1)} cu yd, buying in bulk from a landscape supplier will save you money over bags.`;
-  else if(cy>=1) tip=`💡 You need about ${b3} large (3 cu ft) bags — available at any home improvement store.`;
-  else tip=`💡 Small area — ${b2} bags from any garden center will do it.`;
-  document.getElementById('r-tip').textContent=tip;
+  // Hero
+  document.getElementById('r-mat-label').textContent = m.name + ' needed';
+  document.getElementById('r-cy').innerHTML = `${cubicYd.toFixed(1)}<span class="hu">cu yd</span>`;
+  document.getElementById('r-hero-sub').textContent = `${Math.round(totalSqFt).toLocaleString()} sq ft · ${depthIn} in deep`;
+
+  // Metric cards
+  document.getElementById('r-sf').innerHTML = `${Math.round(totalSqFt).toLocaleString()}<span class="mu">sq ft</span>`;
+  document.getElementById('r-dp').innerHTML = `${depthIn}<span class="mu">in</span>`;
+  document.getElementById('r-cov').innerHTML = `${covPerYd}<span class="mu">sq ft/yd</span>`;
+
+  // Bags / bales
+  if(m.id==='pine'){
+    // Pine straw: sold by bale, each covers ~50 sq ft at 3in
+    const bales = Math.ceil(totalSqFt / (m.baleCovers * (3/depthIn)));
+    document.getElementById('r-bag-label').textContent = 'Bales of pine straw';
+    document.getElementById('r-bags').innerHTML = `${bales}<span class="mu">bales</span>`;
+  } else {
+    // Default: 2 cu ft bags
+    const bags = Math.ceil(cubicFt / m.bagCuFt);
+    document.getElementById('r-bag-label').textContent = `${m.bagCuFt} cu ft bags`;
+    document.getElementById('r-bags').innerHTML = `${bags}<span class="mu">bags</span>`;
+  }
+
+  // Depth warning
+  const warnEl = document.getElementById('r-warn');
+  if(depthIn < m.minDepth){
+    warnEl.style.display='block';
+    warnEl.textContent = `⚠️ ${depthIn} in is below the recommended ${m.minDepth} in minimum for ${m.name}. Results may underperform.`;
+  } else if(depthIn > m.maxDepth && m.id!=='play'){
+    warnEl.style.display='block';
+    warnEl.textContent = `ℹ️ ${depthIn} in is above the typical ${m.maxDepth} in maximum. This may increase cost without added benefit.`;
+  } else {
+    warnEl.style.display='none';
+  }
+
+  // Tip
+  let tip = '';
+  if(m.id==='pine'){
+    tip = `💡 ${m.note}`;
+  } else if(cubicYd>=3){
+    tip = `💡 At ${cubicYd.toFixed(1)} cu yd, buying in bulk from a landscape supplier will be significantly cheaper than bags.`;
+  } else if(cubicYd>=1){
+    tip = `💡 ${m.note}`;
+  } else {
+    tip = `💡 Small area — grab a few bags at any garden center. ${m.note}`;
+  }
+  document.getElementById('r-tip').textContent = tip;
 }
 
-function removeShape(i){
-  map.removeLayer(shapes[i].layer);
-  shapes.splice(i,1);
-  updateResults();
+// ─── Export ───────────────────────────────────────────────────────────────────
+
+function exportSummary(){
+  if(!shapes.length) return;
+  let totalSqFt=0;
+  shapes.forEach(s=>{ totalSqFt+=getAreaSqFt(s); });
+  const m=selMat;
+  const cubicFt=(totalSqFt*depthIn)/12;
+  const cubicYd=cubicFt/27;
+  const bags = m.id==='pine'
+    ? Math.ceil(totalSqFt/(m.baleCovers*(3/depthIn))) + ' bales of pine straw'
+    : Math.ceil(cubicFt/m.bagCuFt) + ` bags (${m.bagCuFt} cu ft each)`;
+
+  const addr = document.getElementById('addr').value || 'Address not set';
+  const text = [
+    '=== Mulch Calculator Summary ===',
+    `Address: ${addr}`,
+    `Material: ${m.name} (${m.sub})`,
+    `Depth: ${depthIn} inches`,
+    `Total area: ${Math.round(totalSqFt).toLocaleString()} sq ft`,
+    `Cubic yards needed: ${cubicYd.toFixed(1)} cu yd`,
+    `Bags/bales: ${bags}`,
+    `Generated: ${new Date().toLocaleDateString()}`,
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('.export-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>{ btn.textContent='📋 Copy summary to clipboard'; },2000);
+  });
 }
 
-// Init
-document.getElementById('addr').addEventListener('keydown',e=>{if(e.key==='Enter')goAddr()});
-document.getElementById('key-in')?.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey()});
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 
-const k=getKey();
+buildMaterials();
+buildPresets();
+
+document.getElementById('addr').addEventListener('keydown',e=>{ if(e.key==='Enter') goAddr(); });
+document.getElementById('key-in')?.addEventListener('keydown',e=>{ if(e.key==='Enter') saveKey(); });
+
+const k = getKey();
 if(k){ initMap(k); }
 else { document.getElementById('setup-sec').style.display='block'; status('Enter your Esri API key above to load the satellite map'); }
 </script>
